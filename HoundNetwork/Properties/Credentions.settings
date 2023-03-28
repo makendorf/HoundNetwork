@@ -1,0 +1,15 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="HoundNetwork.Properties" GeneratedClassName="Credentions">
+  <Profiles />
+  <Settings>
+    <Setting Name="ServerIP" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">172.16.1.191</Value>
+    </Setting>
+    <Setting Name="ServerPort" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">9696</Value>
+    </Setting>
+    <Setting Name="ServerGuid" Type="System.Guid" Scope="Application">
+      <Value Profile="(Default)">22c8e790-aa7c-4a60-91ad-560d00a64d3a</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

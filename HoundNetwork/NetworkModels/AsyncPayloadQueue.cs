@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace HoundNetwork.NetworkModels
 {
-    public class AsyncPayloadQueue
+    public class PacketSubscribe
     {
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
         private readonly SemaphoreSlim _notEmpty = new SemaphoreSlim(0);
@@ -92,6 +92,4 @@ namespace HoundNetwork.NetworkModels
             }
         }
     }
-
-
 }

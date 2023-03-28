@@ -15,7 +15,7 @@ namespace HoundNetwork.NetworkModels
         KeepAlive = 3,
         ClientDisconnect = 4,
         Document = 5,
-        PacketCallback = 6
+        Acknowledgment = 6
     }
     [Serializable]
     public struct Callback
