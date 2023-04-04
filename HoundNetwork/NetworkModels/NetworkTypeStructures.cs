@@ -10,17 +10,14 @@ namespace HoundNetwork.NetworkModels
     public enum TypePacket
     {
         None = 0,
-        Message = 1,
-        Registration = 2,
-        KeepAlive = 3,
+        Registration = 1,
+        KeepAlive = 2,
         ClientDisconnect = 4,
-        Document = 5,
-        Acknowledgment = 6
     }
-    [Serializable]
-    public struct Callback
+    public struct IncomingData
     {
-        public Guid Guid { get; set; }
-        public int FragmentPacket { get; set; }
+        public HoundClient Client;
+        public NetworkPayload Payload;
+        public Guid Guid;
     }
 }

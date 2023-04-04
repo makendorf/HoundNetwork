@@ -13,21 +13,16 @@ namespace HoundNetwork.NetworkModels
     public class NetworkPayload
     {
         public TypePacket PacketType { get; set; }
-        public Guid Sender { get; set; }
-        public Guid Receiver { get; set; }
+        
         public object ObjectData { get; set; }
 
-        public NetworkPayload(Guid sender, Guid receiver, TypePacket packetType, object obj)
+        public NetworkPayload(TypePacket packetType, object obj)
         {
-            Sender = sender;
-            Receiver = receiver;
             PacketType = packetType;
             ObjectData = obj ?? null;
         }
         public NetworkPayload()
         {
-            Sender = Guid.Empty;
-            Receiver = Guid.Empty;
             PacketType = TypePacket.None;
             ObjectData = ObjectData ?? null;
         }
@@ -36,29 +31,33 @@ namespace HoundNetwork.NetworkModels
     public struct NetworkPacket
     {
         public Guid PacketId { get; set; }
+        public Guid Sender { get; set; }
+        public Guid Receiver { get; set; }
         public int FragmentIndex { get; set; }
         public int TotalFragments { get; set; }
         public byte[] Data { get; set; }
     }
-    [Serializable]
+    
     public static class NetworkSerialization
     {
-        public static byte[] Serialize(object obj)
+        public static Guid Sender = Guid.Empty;
+        public static Guid Receiver = Guid.Empty;
+        public static bool Serialize(object obj, out byte[] bytes)
         {
-            byte[] bytes;
+            byte[] _bytes;
             BinaryFormatter formatter = new BinaryFormatter();
             using (MemoryStream stream = new MemoryStream())
             {
                 formatter.Serialize(stream, obj);
-                bytes = stream.ToArray();
+                _bytes = stream.ToArray();
             }
-            return bytes;
+            bytes = _bytes;
+            return true;
         }
-        private static IEnumerable<NetworkPacket> DeployData(NetworkPayload payload)
+        private static IEnumerable<NetworkPacket> DeployData(Guid packetId, NetworkPayload payload)
         {
-            byte[] payloadData = Serialize(payload);
-            Guid packetId = Guid.NewGuid();
-            int maxFragmentSize = 1024;
+            Serialize(payload, out byte[] payloadData);
+            int maxFragmentSize = 4096;
             int totalFragments = (int)Math.Ceiling((double)payloadData.Length / maxFragmentSize);
 
             for (int i = 0; i < totalFragments; i++)
@@ -69,21 +68,26 @@ namespace HoundNetwork.NetworkModels
                 yield return new NetworkPacket
                 {
                     PacketId = packetId,
+                    Sender = Sender,
+                    Receiver = Receiver,
                     TotalFragments = totalFragments,
                     FragmentIndex = i,
                     Data = fragmentData
                 };
             }
         }
-        public static IEnumerable<byte[]> PreparingForSend(NetworkPayload payload)
+        public static IEnumerable<byte[]> PreparingForSend(Guid guid, NetworkPayload payload)
         {
-            foreach (var byteItem in DeployData(payload))
+            foreach (var byteItem in DeployData(guid, payload))
             {
                 using (MemoryStream ms = new MemoryStream())
                 {
                     using (BinaryWriter bw = new BinaryWriter(ms))
                     {
                         bw.Write(byteItem.PacketId.ToByteArray());
+                        bw.Write(byteItem.Sender.ToByteArray());
+                        bw.Write(byteItem.Receiver.ToByteArray());
+
                         bw.Write(byteItem.TotalFragments);
                         bw.Write(byteItem.FragmentIndex);
 
@@ -94,7 +98,7 @@ namespace HoundNetwork.NetworkModels
                 }
             }
         }
-        public static (bool, string) TryDeserialize(byte[] data, out NetworkPacket result)
+        public static (bool, string) DeserializeNetworkPacket(byte[] data, out NetworkPacket result)
         {
             using (var ms = new MemoryStream(data))
             {
@@ -103,6 +107,9 @@ namespace HoundNetwork.NetworkModels
                     try
                     {
                         Guid packetId = new Guid(br.ReadBytes(16));
+                        Guid packetSender = new Guid(br.ReadBytes(16));
+                        Guid packetReceiver = new Guid(br.ReadBytes(16));
+
                         int totalFragments = br.ReadInt32();
                         int fragmentIndex = br.ReadInt32();
 
@@ -112,6 +119,8 @@ namespace HoundNetwork.NetworkModels
                         result = new NetworkPacket
                         {
                             PacketId = packetId,
+                            Sender = packetSender,
+                            Receiver = packetReceiver,
                             TotalFragments = totalFragments,
                             FragmentIndex = fragmentIndex,
                             Data = payloadData
@@ -139,16 +148,8 @@ namespace HoundNetwork.NetworkModels
             int currentIndex = 0;
             foreach (var fragment in fragments)
             {
-                if(currentIndex == fragment.FragmentIndex)
-                {
-                    Array.Copy(fragment.Data, 0, combinedData, currentIndex, fragment.Data.Length);
-                    currentIndex += fragment.Data.Length;
-                }
-                else
-                {
-                    Console.WriteLine("Пропущен пакет");
-                }
-                
+                Array.Copy(fragment.Data, 0, combinedData, currentIndex, fragment.Data.Length);
+                currentIndex += fragment.Data.Length;
             }
             Deserialize(combinedData, out object combinedPayload);
             return (NetworkPayload)combinedPayload;
@@ -157,12 +158,15 @@ namespace HoundNetwork.NetworkModels
         {
             try
             {
-                BinaryFormatter formatter = new BinaryFormatter();
-                using (MemoryStream stream = new MemoryStream(Data))
+                using (var memStream = new MemoryStream())
                 {
-                    obj = formatter.Deserialize(stream);
-                    return (true, "Успешно");
+                    var binForm = new BinaryFormatter();
+                    memStream.Write(Data, 0, Data.Length);
+                    memStream.Seek(0, SeekOrigin.Begin);
+                    obj = binForm.Deserialize(memStream);
                 }
+
+                return (true, "Успешно");
             }
             catch (Exception exc)
             {
