@@ -1,12 +1,9 @@
 ﻿using HoundNetwork.Properties;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -235,15 +232,15 @@ namespace HoundNetwork.NetworkModels
         }
 
 
-        public void Subscribe(HoundClient client, TypePacket responsePacketType, Action<object> onResponseReceived)
+        public void Subscribe(HoundClient client, int responsePacketType, Action<object> onResponseReceived)
         {
             client.subscriptionManager.Subscribe(responsePacketType, onResponseReceived);
         }
-        public void Subscribe(Guid guid, HoundClient client, TypePacket responsePacketType, Action<object> onResponseReceived)
+        public void Subscribe(Guid guid, HoundClient client, int responsePacketType, Action<object> onResponseReceived)
         {
             client.subscriptionManager.Subscribe(guid, responsePacketType, onResponseReceived);
         }
-        public async Task<IncomingData> SendAndWaitResponseAsync(HoundClient client, NetworkPayload payload, TypePacket typePacket = TypePacket.None)
+        public async Task<IncomingData> SendAndWaitResponseAsync(HoundClient client, NetworkPayload payload, int typePacket = 0)
         {
             var checkReceived = new TaskCompletionSource<bool>();
             IncomingData payloadReceived = new IncomingData();

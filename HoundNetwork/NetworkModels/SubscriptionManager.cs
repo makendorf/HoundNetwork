@@ -1,10 +1,6 @@
-﻿using HoundNetwork.NetworkModels;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace HoundNetwork.NetworkModels
 {
@@ -13,7 +9,7 @@ namespace HoundNetwork.NetworkModels
         private readonly Dictionary<Guid, Subscription<object>> _subscriptions = new Dictionary<Guid, Subscription<object>>();
         private readonly ReaderWriterLockSlim _subscriptionLock = new ReaderWriterLockSlim();
 
-        public void Enqueue(TypePacket PacketType, IncomingData Object)
+        public void Enqueue(int PacketType, IncomingData Object)
         {
             try
             {
@@ -46,7 +42,7 @@ namespace HoundNetwork.NetworkModels
             }
         }
 
-        public Subscription<object> Subscribe(Guid guid, TypePacket packetType, Action<object> callback)
+        public Subscription<object> Subscribe(Guid guid, int packetType, Action<object> callback)
         {
             var subscription = new Subscription<object>(guid, packetType, callback, _subscriptions, _subscriptionLock);
             _subscriptionLock.EnterWriteLock();
@@ -60,7 +56,7 @@ namespace HoundNetwork.NetworkModels
             }
             return subscription;
         }
-        public Subscription<object> Subscribe(TypePacket packetType, Action<object> callback)
+        public Subscription<object> Subscribe(int packetType, Action<object> callback)
         {
             Guid guid = Guid.NewGuid();
             var subscription = new Subscription<object>(guid, packetType, callback, _subscriptions, _subscriptionLock);
@@ -84,12 +80,12 @@ namespace HoundNetwork.NetworkModels
     public class Subscription<T> : IDisposable
     {
         public Guid Guid { get; private set; }
-        public TypePacket PacketType { get; }
+        public int PacketType { get; }
         private readonly Action<T> _callback;
         private readonly Dictionary<Guid, Subscription<T>> _subscriptions;
         private readonly ReaderWriterLockSlim _subscriptionLock;
 
-        public Subscription(Guid guid, TypePacket packetType, Action<T> callback, Dictionary<Guid, Subscription<T>> subscriptions, ReaderWriterLockSlim subscriptionLock)
+        public Subscription(Guid guid, int packetType, Action<T> callback, Dictionary<Guid, Subscription<T>> subscriptions, ReaderWriterLockSlim subscriptionLock)
         {
             PacketType = packetType;
             _callback = callback;

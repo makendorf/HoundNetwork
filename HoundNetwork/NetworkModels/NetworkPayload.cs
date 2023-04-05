@@ -12,18 +12,18 @@ namespace HoundNetwork.NetworkModels
     [Serializable]
     public class NetworkPayload
     {
-        public TypePacket PacketType { get; set; }
+        public int PacketType { get; set; }
         
         public object ObjectData { get; set; }
 
-        public NetworkPayload(TypePacket packetType, object obj)
+        public NetworkPayload(int packetType, object obj)
         {
             PacketType = packetType;
             ObjectData = obj ?? null;
         }
         public NetworkPayload()
         {
-            PacketType = TypePacket.None;
+            PacketType = 0;
             ObjectData = ObjectData ?? null;
         }
     }

@@ -1,13 +1,8 @@
 ﻿using HoundNetwork.NetworkModels;
 using HoundNetwork.Properties;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
-using System.Linq;
 using System.Net.Sockets;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace HoundNetwork
@@ -76,7 +71,7 @@ namespace HoundNetwork
 
             _ = Task.Run(async () => await SendKeepAliveAsync(TimeSpan.FromSeconds(5)));
 
-            subscriptionManager.Subscribe(TypePacket.ClientDisconnect, (Obj) =>
+            subscriptionManager.Subscribe((int)TypePacket.ClientDisconnect, (Obj) =>
             {
                 DisconectSubscribe();
             });
@@ -106,10 +101,8 @@ namespace HoundNetwork
                         Console.WriteLine($"Тайм-аут переподключения. ({timeout} мс.)");
                         break;
                     }
-                    Console.WriteLine($"Попытка переподключения №{(curDelayMs / 1000)}");
+                    Console.WriteLine($"Попытка переподключения №{curDelayMs / 1000}");
                     await Task.Delay(retryDelayMs);
-                    
-                    
                 }
             }
         }
@@ -122,7 +115,7 @@ namespace HoundNetwork
                     await Task.Delay(interval);
                     NetworkPayload keepAlivePayload = new NetworkPayload
                     {
-                        PacketType = TypePacket.KeepAlive,
+                        PacketType = (int)TypePacket.KeepAlive,
                         ObjectData = Array.Empty<byte>()
                     };
 
@@ -138,13 +131,13 @@ namespace HoundNetwork
 
         private async void SendRegistrationRequest()
         {
-            NetworkPayload registrationPayload = new NetworkPayload(TypePacket.Registration, DisplayName);
+            NetworkPayload registrationPayload = new NetworkPayload((int)TypePacket.Registration, DisplayName);
             var response = await SendAndWaitResponseAsync(this, registrationPayload);
 
             var guid = (Guid)response.Payload.ObjectData;
-            Console.WriteLine($"Смена GUID: {GUID} -> {guid}");
             SetRegistration(true);
             GUID = guid;
+            Console.WriteLine($"Регистрация.");
         }
         private void DisconectSubscribe()
         {
@@ -152,5 +145,6 @@ namespace HoundNetwork
             GetCancellationTokenSource().Cancel();
             Environment.Exit(0);
         }
+
     }
 }

@@ -1,11 +1,8 @@
 ﻿using HoundNetwork.NetworkModels;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Sockets;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
@@ -38,18 +35,6 @@ namespace HoundNetwork
 
                 _connectedClients.TryAdd(newClientGuid, _client);
 
-                Subscribe(_client, TypePacket.Registration, (Obj) =>
-                {
-                    var incomingData = (IncomingData)Obj;
-                    incomingData.Client = _client;
-                    ClientSendRegistrationRequest(incomingData);
-                });
-
-                Subscribe(_client, TypePacket.KeepAlive, (obj) =>
-                {
-                    KeepAliveRequested();
-                });
-
                 _ = Task.Run(async () =>
                 {
                     try
@@ -61,6 +46,12 @@ namespace HoundNetwork
                         DisconectClient(_client);
                     }
                 });
+
+                Subscribe(_client, (int)TypePacket.Registration, (obj) => ClientSendRegistrationRequest((IncomingData)obj));
+
+                Subscribe(_client, (int)TypePacket.KeepAlive, (obj) => KeepAliveRequested());
+
+                
             }
         }
         private void DisconectClient(HoundClient client)
@@ -86,7 +77,7 @@ namespace HoundNetwork
             var response = new NetworkPayload
             {
                 ObjectData = client.GUID,
-                PacketType = TypePacket.Registration,
+                PacketType = (int)TypePacket.Registration,
             };
             await SendDataAsync(client, response, data.Guid);
         }

@@ -17,11 +17,6 @@ namespace Server
             _ = Task.Run(() => server.StartAsync());
             Task.WaitAny(Task.Delay(5000));
 
-            var payload = new NetworkPayload
-            {
-                PacketType = TypePacket.ClientDisconnect
-            };
-            _ = server.SendDataAsync(server._connectedClients.ElementAt(0).Value, payload);
 
             //var payload = new NetworkPayload
             //{
